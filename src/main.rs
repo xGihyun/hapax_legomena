@@ -2,11 +2,13 @@
 #![allow(unused_imports)]
 #![allow(unused_variables)]
 
-use dialoguer::Select;
+use console::{pad_str, style, Alignment};
+use dialoguer::{
+    theme::{ColorfulTheme, Theme},
+    Select,
+};
 use regex::Regex;
-use std::collections::HashMap;
-use std::env;
-use std::fs;
+use std::{collections::HashMap, env, fs};
 
 fn main() {
     let current_dir = env::current_dir().unwrap();
@@ -15,7 +17,12 @@ fn main() {
     let text_dir = current_dir.join("texts");
 
     if !text_dir.exists() {
-        panic!("The 'texts' folder does not exist in the current working directory.");
+        panic!(
+            "{}",
+            style("The 'texts' folder does not exist in the current working directory.")
+                .red()
+                .bold()
+        );
     }
 
     // Select a text file
@@ -33,9 +40,9 @@ fn main() {
         })
         .collect();
 
-    println!("SELECT A FILE:\n");
+    println!("\n{}\n", style("SELECT A FILE:").bold());
 
-    let selected_file_name = Select::new()
+    let selected_file_name = Select::with_theme(&ColorfulTheme::default())
         .items(&file_names)
         .default(0)
         .clear(false)
@@ -51,11 +58,9 @@ fn main() {
     let words: Vec<&str> = regex.split(&file).filter(|&x| !x.is_empty()).collect();
     let valid_words: Vec<&str> = words.iter().map(|&x| x).collect();
 
-    for word in valid_words {
+    for word in &valid_words {
         *word_count.entry(word.to_lowercase()).or_insert(0) += 1;
     }
-
-    println!("\nHAPAX LEGOMENA:\n");
 
     let mut hapax_legomena: Vec<String> = word_count
         .iter()
@@ -63,9 +68,26 @@ fn main() {
         .map(|(word, _)| word.to_lowercase())
         .collect();
 
+    if hapax_legomena.is_empty() {
+        println!(
+            "\nThis text file contains {} {}.\n",
+            style("no").red().bold(),
+            style("Hapax Legomena").bold()
+        );
+        return;
+    }
+
+    println!("\n{}\n", style("HAPAX LEGOMENA:").bold());
+
     hapax_legomena.sort();
 
-    for word in hapax_legomena {
+    for word in &hapax_legomena {
         println!("{}", word);
     }
+
+    println!(
+        "\nThere are a total of {} {}.\n",
+        style(&hapax_legomena.len()).green().bold(),
+        style("Hapax Legomena").bold()
+    );
 }

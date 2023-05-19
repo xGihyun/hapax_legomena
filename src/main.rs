@@ -8,7 +8,7 @@ use dialoguer::{
     Select,
 };
 use regex::Regex;
-use std::{collections::HashMap, env, fs};
+use std::{collections::HashMap, env, fs, io, io::Write, process};
 
 fn main() {
     let current_dir = env::current_dir().unwrap();
@@ -54,9 +54,18 @@ fn main() {
 
     // Hapax Legomena
     let mut word_count: HashMap<String, i32> = HashMap::new();
-    let regex = Regex::new(r"[^a-zA-Z0-9]+").unwrap();
+    let regex = Regex::new(r"[^a-zA-Z]+").unwrap();
     let words: Vec<&str> = regex.split(&file).filter(|&x| !x.is_empty()).collect();
     let valid_words: Vec<&str> = words.iter().map(|&x| x).collect();
+
+    if words.is_empty() {
+        println!(
+            "\nThis text file contains {} {}.\n",
+            style("no").red().bold(),
+            style("content").bold()
+        );
+        return;
+    }
 
     for word in &valid_words {
         *word_count.entry(word.to_lowercase()).or_insert(0) += 1;
@@ -75,6 +84,10 @@ fn main() {
             style("Hapax Legomena").bold()
         );
         return;
+        // println!("Press enter to exit program");
+        // io::stdout().flush().unwrap();
+        // let mut input = String::new();
+        // io::stdin().read_line(&mut input).unwrap();
     }
 
     println!("\n{}\n", style("HAPAX LEGOMENA:").bold());
@@ -90,4 +103,9 @@ fn main() {
         style(&hapax_legomena.len()).green().bold(),
         style("Hapax Legomena").bold()
     );
+
+    // println!("Press enter to exit program");
+    // let mut input = String::new();
+    // io::stdin().read_line(&mut input).unwrap();
+    // process::exit(0);
 }
